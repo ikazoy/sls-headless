@@ -1,0 +1,31 @@
+{
+  "name": "@aws-template/headless-screenshot",
+  "version": "1.0.0",
+  "license": "UNLICENSED",
+  "scripts": {
+    "clean": "rimraf .serverless .esbuild node_modules dist && yarn cache clean",
+    "preinstall": "export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true",
+    "ci": "yarn install --frozen-lockfile",
+    "checktsc": "tsc -noEmit",
+    "bundle": "esbuild lambda/**.ts --bundle --minify --sourcemap --platform=node --target=es2020 --external:puppeteer-core --external:@sparticuz/chromium --outdir=dist",
+    "invoke": "ts-node local/index.ts",
+    "deploy": "yarn run serverless deploy",
+    "remove": "yarn run serverless remove"
+  },
+  "dependencies": {
+    "@aws-lambda-powertools/logger": "1.7.0",
+		"@sparticuz/chromium": "112.0.2",
+    "puppeteer-core": "19.8.1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "8.10.106",
+    "@types/node": "18.7.23",
+    "esbuild": "0.14.51",
+    "puppeteer": "19.8.1",
+    "rimraf": "3.0.2",
+    "serverless": "3.28.1",
+    "serverless-s3-cleaner": "2.0.2",
+    "typescript": "5.0.2",
+    "ts-node": "10.9.1"
+  }
+}

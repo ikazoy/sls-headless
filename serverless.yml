@@ -1,0 +1,97 @@
+service: headless
+
+plugins:
+  - serverless-s3-cleaner
+
+custom:
+  project: template
+  baseName: ${self:custom.project}-${self:service}-${self:provider.stage}
+  
+  serverless-s3-cleaner:
+    buckets:
+      - ${cf:${self:custom.baseName}.ServerlessDeploymentBucketName, ''}
+
+
+provider:
+  name: aws
+  region: ${opt:region, 'eu-west-1'}
+  stage: ${opt:stage, 'dev'}
+  stackName: ${self:custom.baseName}
+  deploymentBucket:
+    blockPublicAccess: true
+  architecture: x86_64
+  runtime: nodejs18.x
+  memorySize: 7077
+  timeout: 900
+  versionFunctions: false
+  logRetentionInDays: 7
+  logs:
+    httpApi: true
+  environment:
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    NODE_OPTIONS: "--enable-source-maps"
+  apiGateway:
+    binaryMediaTypes:
+      - '*/*'
+  httpApi:
+    disableDefaultEndpoint: false
+    shouldStartNameWithService: true
+    cors:
+      allowedOrigins: 
+        - '*'
+      allowedMethods:
+        - GET
+  ecr:
+    scanOnPush: true
+    images:
+      screenshot:
+        path: ./
+
+functions:
+  screenshot:
+    name: ${self:custom.baseName}-screenshot
+    image:
+      name: screenshot
+      command:
+        - 'index.handler'
+      entryPoint:
+        - '/lambda-entrypoint.sh'
+    events:
+      - httpApi:
+          method: GET
+          path: /
+    environment:
+      POWERTOOLS_SERVICE_NAME: ${self:custom.baseName}-screenshot
+      LOG_LEVEL: INFO
+      ACCOUNT_ID: ${aws:accountId}
+    role: ScreenshotRole
+
+
+resources:
+  Resources:
+
+    # IAM
+
+    ScreenshotRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${self:custom.baseName}-role
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: ${self:custom.baseName}-policy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource: !Sub arn:aws:logs:${self:provider.region}:${aws:accountId}:log-group:/aws/lambda/*:log-stream:*
