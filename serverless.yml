@@ -14,7 +14,7 @@ custom:
 
 provider:
   name: aws
-  region: ${opt:region, 'eu-west-1'}
+  region: ${opt:region, 'ap-northeast-1'}
   stage: ${opt:stage, 'dev'}
   stackName: ${self:custom.baseName}
   deploymentBucket:
@@ -48,6 +48,7 @@ provider:
         path: ./
 
 functions:
+  # TODO: not use scrennshot anymore, use scrape or something else
   screenshot:
     name: ${self:custom.baseName}-screenshot
     image:
@@ -69,9 +70,6 @@ functions:
 
 resources:
   Resources:
-
-    # IAM
-
     ScreenshotRole:
       Type: AWS::IAM::Role
       Properties:
