@@ -3,6 +3,7 @@ import puppeteer, { Page, Browser } from 'puppeteer';
 const url = 'https://www.google.com';
 
 (async () => {
+    // TODO: agnostic to OS
     const browser: Browser = await puppeteer.launch({
         executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
         headless: false,
