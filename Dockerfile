@@ -28,6 +28,9 @@ COPY --from=base \
 
 RUN npm install --global yarn
 
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_SKIP_DOWNLOAD=true
+
 RUN yarn run ci
 
 EXPOSE 3000
