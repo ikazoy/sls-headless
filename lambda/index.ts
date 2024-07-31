@@ -39,23 +39,7 @@ export async function handler(event: APIGatewayProxyEventV2, context: Context): 
   try {
     await page.goto(pageUrl, { waitUntil: ['domcontentloaded', 'networkidle0'] });
     
-		await page.evaluate(() => {
-			// Remove <style type="text/css"> elements
-			const styleElements = document.querySelectorAll('style');
-			styleElements.forEach(el => el.remove());
-
-			// Remove comments
-			const comments = document.createTreeWalker(document, NodeFilter.SHOW_COMMENT, null);
-			let comment;
-			while (comment = comments.nextNode()) {
-				comment.parentNode?.removeChild(comment);
-			}
-		});
-
-    // Get the updated HTML content after removing the elements
-		const html = await page.content();
-
-    		// Execute code in the context of the browser to fetch candidates of RSS feed URL
+    // Execute code in the context of the browser to fetch candidates of RSS feed URL
 		const rssElements = await page.evaluate(() => {
 			// すべての要素を取得
 			const allElements: NodeListOf<Element> = document.querySelectorAll('*');
@@ -75,12 +59,17 @@ export async function handler(event: APIGatewayProxyEventV2, context: Context): 
 			return rssElements.map(el => el.outerHTML); // Return the outer HTML of the elements
 		});
 
+    // Get only text other than html tags
+    const innerText = await page.evaluate(() => {
+      return document.body.innerText;
+    });
+
     return {
       statusCode: 200,
       body: JSON.stringify({
         success: true,
         pageUrl,
-        contentHTML: html,
+        innerText,
         rssElements,
       }),
     };
